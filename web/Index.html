@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tengahin</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.module.js","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.143.0/examples/jsm/"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas class="planet-canvas"></canvas>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="pin" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+<symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></symbol>
+</defs></svg>
+
+<div class="page" id="top">
+<header class="hero">
+  <nav class="nav">
+    <a class="brand" href="#top"><span class="brand-mark">⌖</span>Tengahin</a>
+    <div class="nav-links"><a href="#calculator">Calculator</a><a href="#mapview">Map View</a><a href="#calculator" id="navPreset">Preset Areas</a><a href="#faq">FAQ</a></div>
+    <button class="btn btn-ghost" id="quickPreset">Quick Preset</button>
+  </nav>
+  <section class="section features" id="calculator">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Atur Titik Peserta</span>
+      <h2>Masukkan Lokasi Rumah Masing-Masing</h2>
+      <p>Tambah peserta sesukamu, ketik alamat atau gunakan tombol GPS instan untuk deteksi posisi.</p>
+    </div>
+    <div class="feature-grid" id="grid" data-reveal style="--rd:100ms"></div>
+    <div class="panel-actions" data-reveal style="--rd:160ms">
+      <button class="btn btn-outline" id="simBtn">Simulasi Rumah A, B, C</button>
+      <button class="btn btn-primary" id="calcBtn">Hitung Titik Tengah <svg class="i" style="stroke-width:2"><use href="#arrow"/></svg></button>
+    </div>
+  </section>
+</header>
+
+<section class="section showcase" id="mapview">
+  <div class="showcase-grid">
+    <div class="showcase-copy" data-reveal>
+      <span class="eyebrow">Hasil Kalkulasi</span>
+      <h2>Titik Tengah &amp; Tempat Terdekat</h2>
+      <p>Temukan tempat bernama dalam radius 2 km dari titik tengah dan lihat detailnya di Google Maps.</p>
+      <div class="readout" id="readout">Belum ada hasil. Tambahkan minimal dua lokasi, lalu tekan “Hitung Titik Tengah”.</div>
+      <div class="hero-actions" style="margin:0;justify-content:inherit">
+        <a class="btn btn-primary" id="mapLink" href="https://www.google.com/maps" target="_blank" rel="noopener">Lihat di Google Maps <svg class="i" style="stroke-width:2"><use href="#arrow"/></svg></a>
+        <button class="btn btn-outline" id="cafeBtn">Cari Tempat Terdekat</button>
+      </div>
+    </div>
+    <div class="dashboard" data-reveal style="--rd:120ms">
+      <div id="map"></div>
+      <p class="map-notice">Peta dan hasil pencarian menggunakan data OpenStreetMap dalam radius 2 km.</p>
+    </div>
+  </div>
+  <div class="places-list" id="placesList" aria-live="polite"></div>
+</section>
+
+<section class="section cta" id="faq">
+  <div class="cta-card">
+    <span class="eyebrow" data-reveal style="--rd:60ms">Bantuan &amp; FAQ</span>
+    <h2 data-reveal style="--rd:140ms">Punya Pertanyaan Seputar Tengahin?</h2>
+    <p data-reveal style="--rd:220ms">Peta dan pencarian memakai data OpenStreetMap. Hasil tempat bernama mengikuti kelengkapan data kontributor setempat.</p>
+    <div class="hero-actions" data-reveal style="--rd:300ms">
+      <a class="btn btn-primary" href="#calculator">Buat Jadwal Kumpul <svg class="i" style="stroke-width:2"><use href="#arrow"/></svg></a>
+      <a class="btn btn-outline" href="mailto:raflidnu@gmail.com">Hubungi Pembuat</a>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark">⌖</span>Tengahin</a><p>Solusi adil nentuin titik kumpul nongkrong tanpa debat.</p></div>
+    <div class="footer-cols">
+      <div><h4>Navigasi</h4><a href="#calculator">Calculator</a><a href="#mapview">Map</a><a href="#calculator">Presets</a></div>
+      <div><h4>Sumber</h4><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a><a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OSM</a></div>
+      <div><h4>Legal</h4><a href="#faq">Open Source</a><a href="#faq">MIT</a></div>
+    </div>
+  </footer>
+  <div class="copyright">© <span id="yr"></span> Tengahin. — only them who knows what i'm working on😭😭</div>
+</section>
+</div>
+
+<script type="module" src="app.js"></script>
+<script type="module" src="planet.js"></script>
+</body>
+</html>

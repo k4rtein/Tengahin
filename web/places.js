@@ -54,43 +54,62 @@ export async function findPlaces(center, isCurrentRequest) {
     nwr(around:2000,${center.lat},${center.lon})["name"]["shop"~"^(mall|department_store)$"];
     nwr(around:2000,${center.lat},${center.lon})["name"]["historic"~"^(castle|monument|memorial|archaeological_site)$"];
   );out center 120;`;
-  let elements;
+  const controllers = ENDPOINTS.map(() => typeof AbortController === 'function' ? new AbortController() : null);
   const errors = [];
-  for (const endpoint of ENDPOINTS) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: new URLSearchParams({ data: query }),
-        signal: controller.signal
-      });
-      if (!response.ok) {
-        const detail = response.status === 502 || response.status === 504
-          ? 'server sedang penuh'
-          : `HTTP ${response.status}`;
-        throw new Error(`Overpass ${detail}`);
+  let failures = 0;
+  const elements = await new Promise((resolve, reject) => {
+    ENDPOINTS.forEach(async (endpoint, index) => {
+      const controller = controllers[index];
+      let timeout;
+      try {
+        const request = fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: new URLSearchParams({ data: query }),
+          ...(controller ? { signal: controller.signal } : {})
+        });
+        const response = await Promise.race([
+          request,
+          new Promise((_, reject) => {
+            timeout = setTimeout(() => {
+              if (controller) controller.abort();
+              reject(new Error('waktu tunggu habis'));
+            }, 12000);
+          })
+        ]);
+        if (!response.ok) {
+          const detail = response.status === 502 || response.status === 504
+            ? 'server sedang penuh'
+            : `HTTP ${response.status}`;
+          throw new Error(`Overpass ${detail}`);
+        }
+        const data = await response.json();
+        if (!Array.isArray(data.elements)) throw new Error('Respons Overpass tidak valid');
+        if (!isCurrentRequest()) {
+          controllers.forEach(item => item?.abort());
+          resolve(null);
+          return;
+        }
+        controllers.forEach((item, itemIndex) => {
+          if (itemIndex !== index) item?.abort();
+        });
+        resolve(data.elements);
+      } catch (error) {
+        errors[index] = `${new URL(endpoint).hostname}: ${error.name === 'AbortError' ? 'waktu tunggu habis' : error.message}`;
+        failures++;
+        if (failures === ENDPOINTS.length) {
+          const details = errors.join('; ');
+          const isBusy = errors.some(message => /server sedang penuh|waktu tunggu habis/i.test(message));
+          reject(new Error(isBusy
+            ? `Server pencarian OpenStreetMap sedang sibuk atau penuh. Coba lagi sebentar. (${details})`
+            : `Server pencarian OpenStreetMap tidak merespons. (${details || 'Koneksi gagal'})`));
+        }
+      } finally {
+        clearTimeout(timeout);
       }
-      const data = await response.json();
-      if (!Array.isArray(data.elements)) throw new Error('Respons Overpass tidak valid');
-      elements = data.elements;
-      break;
-    } catch (error) {
-      const message = error.name === 'AbortError' ? 'waktu tunggu habis' : error.message;
-      errors.push(`${new URL(endpoint).hostname}: ${message}`);
-    } finally {
-      clearTimeout(timeout);
-    }
-    if (!isCurrentRequest()) return null;
-  }
-  if (!elements) {
-    const details = errors.join('; ');
-    const isBusy = errors.some(error => /server sedang penuh|waktu tunggu habis/i.test(error));
-    throw new Error(isBusy
-      ? `Server pencarian OpenStreetMap sedang sibuk atau penuh. Coba lagi sebentar. (${details})`
-      : `Server pencarian OpenStreetMap tidak merespons. (${details || 'Koneksi gagal'})`);
-  }
+    });
+  });
+  if (!elements || !isCurrentRequest()) return null;
 
   const seen = new Set();
   return elements.flatMap(place => {

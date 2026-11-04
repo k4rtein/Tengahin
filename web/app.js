@@ -204,10 +204,10 @@ async function findNearbyPlaces() {
   const request = ++poiRequest;
   const isCurrentRequest = () => request === poiRequest && mid === searchMid;
   $('cafeBtn').disabled = true;
-  $('readout').textContent = 'Mencari tempat bernama dalam radius 2 km…';
+  $('readout').textContent = 'Mencari tempat dalam radius 2 km… (long ass loading time, please wait)';
   const pending = document.createElement('p');
   pending.className = 'places-message';
-  pending.textContent = 'Memuat daftar tempat…';
+  pending.textContent = 'nah bro this function is not working properly 😭😭😭😭';
   $('placesList').replaceChildren(pending);
   try {
     const places = await findPlaces(searchMid, isCurrentRequest);

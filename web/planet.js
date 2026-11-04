@@ -55,8 +55,9 @@ float snoise(vec3 v){
 }`;
 
 const canvas = document.querySelector('.planet-canvas');
-const renderer = new THREE.WebGL1Renderer({ canvas, antialias:true });
-renderer.setPixelRatio(devicePixelRatio);
+const pixelRatio = () => Math.min(devicePixelRatio || 1, innerWidth <= 720 ? 1 : 1.5);
+const renderer = new THREE.WebGL1Renderer({ canvas, antialias:innerWidth > 720, powerPreference:'low-power' });
+renderer.setPixelRatio(pixelRatio());
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
@@ -385,7 +386,7 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 addEventListener('resize', () => {
-  const w = innerWidth, h = innerHeight, pr = devicePixelRatio;
+  const w = innerWidth, h = innerHeight, pr = pixelRatio();
   camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setPixelRatio(pr); renderer.setSize(w, h, false);
   [torusComposer, bloomComposer, finalComposer].forEach(c => { c.setPixelRatio(pr); c.setSize(w, h); });
   [motes, stars].forEach(p => p.material.uniforms.uRes.value.copy(res()));

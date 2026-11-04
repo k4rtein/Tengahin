@@ -5,7 +5,7 @@ document.getElementById('yr').textContent = new Date().getFullYear();
 
 /* reveal + Lenis */
 const items = document.querySelectorAll('[data-reveal]');
-if (reduced) items.forEach(e => e.classList.add('in'));
+if (reduced || !('IntersectionObserver' in window)) items.forEach(e => e.classList.add('in'));
 else {
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .18, rootMargin: '0px 0px -8% 0px' });
   items.forEach(e => io.observe(e));
@@ -98,20 +98,31 @@ function render() {
 
 /* map */
 const BASES = ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/', 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/', 'https://unpkg.com/leaflet@1.9.4/dist/'];
-const loadJS = u => new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+const loadJS = (url, timeoutMs = 8000) => new Promise((resolve, reject) => {
+  const script = document.createElement('script');
+  const timeout = setTimeout(() => {
+    script.remove();
+    reject(new Error(`Waktu tunggu habis saat memuat ${url}`));
+  }, timeoutMs);
+  script.onload = () => { clearTimeout(timeout); resolve(); };
+  script.onerror = () => { clearTimeout(timeout); reject(new Error(`Gagal memuat ${url}`)); };
+  script.src = url;
+  document.head.appendChild(script);
+});
 async function loadLeaflet() {
   for (const base of BASES) {
     try {
       await loadJS(base + 'leaflet.js');
+      if (!window.L) continue;
       const stylesheet = document.createElement('link');
       stylesheet.rel = 'stylesheet';
       stylesheet.href = base + 'leaflet.css';
       document.head.appendChild(stylesheet);
-      return true;
+      return;
     } catch {}
   }
-  return Boolean(window.L);
 }
+async function initializeApp() {
 await loadLeaflet();
 
 let map, layer, poiLayer;
@@ -271,3 +282,9 @@ $('simBtn').onclick = $('quickPreset').onclick = simulate;
 $('calcBtn').onclick = calc;
 $('cafeBtn').onclick = findNearbyPlaces;
 render();
+}
+
+initializeApp().catch(error => {
+  console.error('Aplikasi gagal diinisialisasi:', error);
+  $('readout').textContent = 'Aplikasi gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.';
+});

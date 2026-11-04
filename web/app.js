@@ -24,8 +24,15 @@ const PRESET = [
 ];
 let people = [{ name: 'Teman 1', address: '', lat: null, lon: null }, { name: 'Teman 2', address: '', lat: null, lon: null }];
 let mid = null;
+let poiRequest = 0;
 const grid = document.getElementById('grid');
 const $ = id => document.getElementById(id);
+
+function invalidatePoiSearch() {
+  poiRequest++;
+  const searchButton = $('cafeBtn');
+  if (searchButton) searchButton.disabled = false;
+}
 
 function render() {
   grid.innerHTML = '';
@@ -191,14 +198,7 @@ function calc() {
   $('mapview').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
 }
 
-let poiRequest = 0;
-function invalidatePoiSearch() {
-  poiRequest++;
-  $('cafeBtn').disabled = false;
-}
-
 async function findNearbyPlaces() {
-  if (!map) return;
   if (!mid) { calc(); if (!mid) return; }
   const searchMid = mid;
   const request = ++poiRequest;
@@ -253,7 +253,7 @@ async function findNearbyPlaces() {
       body.appendChild(link);
       card.appendChild(body);
       list.appendChild(card);
-      addMarker(place.lat, place.lon,
+      if (map) addMarker(place.lat, place.lon,
         `<b>${esc(place.name || 'Tempat menarik')}</b><br>${esc(place.label || 'Tempat menarik')} · ${distance.toFixed(1)} km`, 'place');
     });
     if (!nearbyPlaces.length) {
